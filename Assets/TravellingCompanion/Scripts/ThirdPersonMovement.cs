@@ -3,18 +3,19 @@ using UnityEngine;
 public class ThirdPersonMovement : MonoBehaviour
 {
     [SerializeField] private Transform playerCamera;
-    [SerializeField] private float speed = 6f;
+    [SerializeField] private float walkingSpeed = 6f;
+    [SerializeField] private float runningSpeed = 10f;
     [SerializeField] private float turnSmoothTime = 0.1f;
     private Transform _transform;
     private InputHandler _inputHandler;
-    private CharacterController _characterController;
+    private Rigidbody _rigidbody;
     private float _turnSmoothVelocity;
 
     private void Awake()
     {
         _transform = transform;
         _inputHandler = GetComponent<InputHandler>();
-        _characterController = GetComponent<CharacterController>();
+        _rigidbody = GetComponent<Rigidbody>();
     }
 
     private void Start()
@@ -22,25 +23,24 @@ public class ThirdPersonMovement : MonoBehaviour
         playerCamera = playerCamera != null ? playerCamera : Camera.main.transform;
     }
 
-    private void Update()
+    private void FixedUpdate()
     {
-        if (_inputHandler == null || _characterController == null) return;
-
-        Move();
+        HandleMovement();
     }
 
-    private void Move()
+    private void HandleMovement()
     {
-        var direction = _inputHandler.PlayerInput.normalized;
+        var direction = _inputHandler.InputDirection;
 
         if (direction.magnitude >= 0.1f)
         {
             float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + playerCamera.eulerAngles.y;
             float currentAngle = Mathf.SmoothDampAngle(_transform.eulerAngles.y, targetAngle, ref _turnSmoothVelocity, turnSmoothTime);
-            _transform.rotation = Quaternion.Euler(0f, currentAngle, 0f);
+            _rigidbody.MoveRotation(Quaternion.Euler(0f, currentAngle, 0f));
 
-            Vector3 moveDirection = Quaternion.Euler(0f, targetAngle, 0f).normalized * Vector3.forward;
-            _characterController.Move(direction * speed * Time.deltaTime);
+            var currentSpeed = _inputHandler.IsRunning ? runningSpeed : walkingSpeed;
+            Vector3 moveVelocity = _transform.forward * currentSpeed;
+            _rigidbody.MovePosition(_rigidbody.position + moveVelocity * Time.deltaTime);
         }
     }
 }
