@@ -56,7 +56,6 @@ public class ThirdPersonMovement : MonoBehaviour
     {
         if(_inputHandler.IsJumping && _groundChecker.IsGrounded)
         {
-            // _rigidbody.AddForce(Vector3.up * jumpingForce, ForceMode.Impulse);
             _rigidbody.velocity = Vector3.up * jumpingForce;
             _inputHandler.IsJumping = false;
         }
